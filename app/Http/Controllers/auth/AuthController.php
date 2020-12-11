@@ -11,36 +11,41 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        try {
-            $validData = $request->validate([
-                'name'  => 'required',
-                'email' => 'required|email',
-                'password' => 'required'
-            ]);
-            $user = User::store($validData);
+        $validData = $request->validate([
+            'name'  => 'required',
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
+
+        $user = User::store($validData);
+
+        if($user) {
+
             $accessToken = $user->createToken('authToken')->accessToken;
+
             return json_encode([
                 'success' => true,
                 'error' => [],
                 'user'  => $user,
                 'accessToken'   => $accessToken,
             ]);
-        } catch (\Exception $e) {
+
+        } else {
+
             return json_encode([
                 'success'   => false,
-                'error' => $e->getMessage(),
+                'error' => 'No user',
             ]);
         }
     }
 
     public function login(Request $request)
     {
-        try {
-            $validData = $request->validate([
-                'email' => 'required|email',
-                'password'  => 'required'
-            ]);
-            auth()->attempt($validData);
+        $validData = $request->validate([
+            'email' => 'required|email',
+            'password'  => 'required'
+        ]);
+        if(Auth::attempt($validData)) {
             $accessToken = Auth::user()->createToken('authToken')->accessToken;
             return json_encode([
                 'success' => true,
@@ -48,12 +53,12 @@ class AuthController extends Controller
                 'user'  => Auth::user(),
                 'accessToken'   => $accessToken,
             ]);
-
-        } catch (\Exception $e) {
+        } else {
             return json_encode([
-                'success'   => false,
-                'error' => $e->getMessage(),
+                'success' => false,
+                'error' => 'Invalid login data',
             ]);
         }
+
     }
 }
